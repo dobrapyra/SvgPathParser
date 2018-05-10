@@ -1,0 +1,35 @@
+{
+  "name": "svgpathparser",
+  "version": "1.0.0",
+  "description": "SVG path parser",
+  "main": "gulpfile.js",
+  "dependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dobrapyra/SvgPathParser.git"
+  },
+  "keywords": [
+    "svg",
+    "path",
+    "parser",
+    "coordinate",
+    "xy"
+  ],
+  "author": "dobrapyra",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dobrapyra/SvgPathParser/issues"
+  },
+  "homepage": "https://github.com/dobrapyra/SvgPathParser#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-notify": "^3.0.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-strip-debug": "^1.1.0",
+    "gulp-uglify": "^3.0.0"
+  }
+}

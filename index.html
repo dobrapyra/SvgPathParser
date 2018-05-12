@@ -7,9 +7,10 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   </head>
   <body>
-    <script type="text/javascript" src="./dist/svg-path-parser.min.js"></script>
+    <!-- <script type="text/javascript" src="./dist/svg-path-parser.min.js"></script> -->
+    <script type="text/javascript" src="./src/parser/core.js"></script>
     <script>
-      var parser = new SvgPathParser();
+      console.log((new SvgPathParser()).parse('m10.10 10.10 12.4 32.1l20 20z').result());
     </script>
   </body>
 </html>

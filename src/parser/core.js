@@ -209,26 +209,37 @@ Object.assign(SvgPathParser.prototype, {
           console.warn( 'Unexpected command ' + cmdObj.cmd );
           break;
 
+        // moveTo relative
         case 'm':
           endXY = [
             roundVal( beginXY[0] + cmdObj.params[0], p ),
             roundVal( beginXY[1] + cmdObj.params[1], p )
           ];
-          if( lastCmd === null || lastCmd === 'z' || lastCmd === 'Z' ){
+          if(
+            lastCmd === 'z' || lastCmd === 'Z' || 
+            lastCmd === 'm' || lastCmd === 'M' ||
+            lastCmd === null
+          ){
             pathBeginXY = endXY;
           }
           break;
 
+        // moveTo absolute
         case 'M':
           endXY = [
             cmdObj.params[0],
             cmdObj.params[1]
           ];
-          if( lastCmd === null || lastCmd === 'Z' || lastCmd === 'z' ){
+          if(
+            lastCmd === 'Z' || lastCmd === 'z' ||
+            lastCmd === 'M' || lastCmd === 'm' ||
+            lastCmd === null
+          ){
             pathBeginXY = endXY;
           }
           break;
 
+        // lineTo relative
         case 'l':
           endXY = [
             roundVal( beginXY[0] + cmdObj.params[0], p ),
@@ -236,6 +247,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // lineTo absolute
         case 'L':
           endXY = [
             cmdObj.params[0],
@@ -243,6 +255,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // horizontal line relative
         case 'h':
           endXY = [
             roundVal( beginXY[0] + cmdObj.params[0], p ),
@@ -250,6 +263,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // horizontal line absolute
         case 'H':
           endXY = [
             cmdObj.params[0],
@@ -257,6 +271,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // vertical line relative
         case 'v':
           endXY = [
             beginXY[0],
@@ -264,6 +279,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // vertical line absolute
         case 'V':
           endXY = [
             beginXY[0],
@@ -271,6 +287,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // close path
         case 'z':
         case 'Z':
           endXY = [
@@ -279,6 +296,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // elipse relative
         case 'a':
           endXY = [
             roundVal( beginXY[0] + cmdObj.params[5], p ),
@@ -286,6 +304,7 @@ Object.assign(SvgPathParser.prototype, {
           ];
           break;
 
+        // elipse absolute
         case 'A':
           endXY = [
             cmdObj.params[5],
@@ -294,6 +313,7 @@ Object.assign(SvgPathParser.prototype, {
           break;
       }
 
+      lastCmd = cmdObj.cmd;
       lastXY = endXY;
       return Object.assign( cmdObj, {
         xy: {

@@ -134,11 +134,6 @@ Object.assign(SvgPathParser.prototype, {
         case 'v':
         case 'H':
         case 'V':
-          cmdArr.push({
-            cmd: group.cmd,
-            params: group.params.slice(paramsC, paramsC + 1)
-          });
-          paramsC += 1;
           while(paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
@@ -173,6 +168,17 @@ Object.assign(SvgPathParser.prototype, {
               params: group.params.slice(paramsC, paramsC + 2)
             });
             paramsC += 2;
+          }
+          break;
+
+        case 'a':
+        case 'A':
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: group.cmd,
+              params: group.params.slice(paramsC, paramsC + 7)
+            });
+            paramsC += 7;
           }
           break;
 
@@ -270,6 +276,20 @@ Object.assign(SvgPathParser.prototype, {
           endXY = [
             pathBeginXY[0],
             pathBeginXY[1]
+          ];
+          break;
+
+        case 'a':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[5], p ),
+            roundVal( beginXY[1] + cmdObj.params[6], p )
+          ];
+          break;
+
+        case 'A':
+          endXY = [
+            cmdObj.params[5],
+            cmdObj.params[6]
           ];
           break;
       }

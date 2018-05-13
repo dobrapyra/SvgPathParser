@@ -2,7 +2,7 @@ var SvgPathParser = function(props){ this.init(props); };
 Object.assign(SvgPathParser.prototype, {
 
   init: function(props) {
-    this.precision = props.precision || 100000;
+    this.precision = props.precision || 1e5;
   },
 
   /**
@@ -171,6 +171,41 @@ Object.assign(SvgPathParser.prototype, {
           }
           break;
 
+        case 'c':
+        case 'C':
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: group.cmd,
+              params: group.params.slice(paramsC, paramsC + 6)
+            });
+            paramsC += 6;
+          }
+          break;
+
+        case 's':
+        case 'S':
+        case 'q':
+        case 'Q':
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: group.cmd,
+              params: group.params.slice(paramsC, paramsC + 4)
+            });
+            paramsC += 4;
+          }
+          break;
+
+        case 't':
+        case 'T':
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: group.cmd,
+              params: group.params.slice(paramsC, paramsC + 2)
+            });
+            paramsC += 2;
+          }
+          break;
+
         case 'a':
         case 'A':
           while(paramsC < paramsL) {
@@ -293,6 +328,70 @@ Object.assign(SvgPathParser.prototype, {
           endXY = [
             pathBeginXY[0],
             pathBeginXY[1]
+          ];
+          break;
+
+        // cubic bezier curve relative
+        case 'c':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[4], p ),
+            roundVal( beginXY[1] + cmdObj.params[5], p )
+          ];
+          break;
+
+        // cubic bezier curve absolute
+        case 'C':
+          endXY = [
+            cmdObj.params[4],
+            cmdObj.params[5]
+          ];
+          break;
+
+        // shorthand cubic bezier curve relative
+        case 's':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[2], p ),
+            roundVal( beginXY[1] + cmdObj.params[3], p )
+          ];
+          break;
+
+        // shorthand cubic bezier curve absolute
+        case 'S':
+          endXY = [
+            cmdObj.params[2],
+            cmdObj.params[3]
+          ];
+          break;
+
+        // quadratic bezier curve relative
+        case 'q':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[2], p ),
+            roundVal( beginXY[1] + cmdObj.params[3], p )
+          ];
+          break;
+
+        // quadratic bezier curve absolute
+        case 'Q':
+          endXY = [
+            cmdObj.params[2],
+            cmdObj.params[3]
+          ];
+          break;
+
+        // shorthand quadratic bezier curve relative
+        case 'q':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[0], p ),
+            roundVal( beginXY[1] + cmdObj.params[1], p )
+          ];
+          break;
+
+        // shorthand quadratic bezier curve absolute
+        case 'Q':
+          endXY = [
+            cmdObj.params[0],
+            cmdObj.params[1]
           ];
           break;
 

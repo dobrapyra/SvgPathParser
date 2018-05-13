@@ -32,9 +32,8 @@ Object.assign(SvgPathParser.prototype, {
 
     var cmdArrWithXY = this._getCmdBeginEndXY(cmdArr);
 
-    this.pointsArr = cmdArrWithXY;
-
-    // this.pointsArr = [];
+    this.cmdArr = cmdArrWithXY;
+    this.pointsArr = this._getXYArr(cmdArrWithXY);
 
     return this;
   },
@@ -93,6 +92,7 @@ Object.assign(SvgPathParser.prototype, {
     groupArr.map( function(group) {
       paramsL = group.params.length;
       paramsC = 0;
+
       switch(group.cmd) {
         default:
           console.warn( 'Unexpected command ' + group.cmd );
@@ -218,6 +218,8 @@ Object.assign(SvgPathParser.prototype, {
           break;
 
       }
+
+      return group;
     } );
 
     return cmdArr;
@@ -251,7 +253,7 @@ Object.assign(SvgPathParser.prototype, {
             roundVal( beginXY[1] + cmdObj.params[1], p )
           ];
           if(
-            lastCmd === 'z' || lastCmd === 'Z' || 
+            lastCmd === 'z' || lastCmd === 'Z' ||
             lastCmd === 'm' || lastCmd === 'M' ||
             lastCmd === null
           ){
@@ -426,10 +428,46 @@ Object.assign(SvgPathParser.prototype, {
   },
 
   /**
+   * _getXYArr - return array of xy array (for each subpath)
+   * @param {array} cmdArr - cmd array with xy info
+   */
+  _getXYArr: function(cmdArr) {
+    var subpathArr = [];
+    var subpathC = 0;
+    var cmdMax = cmdArr.length - 1;
+    var cmdC = 0;
+    var lastCmd = null;
+
+    subpathArr[subpathC] = [];
+    cmdArr.map( function(cmdObj) {
+      if( cmdObj.cmd === 'm' || cmdObj.cmd === 'M' && (
+        lastCmd === 'm' || lastCmd === 'M' ||
+        lastCmd === 'z' || lastCmd === 'Z'
+      ) ) {
+        subpathArr[subpathC].splice(-1);
+      }
+      if( cmdObj.cmd === 'z' || cmdObj.cmd === 'Z' ) {
+        if( cmdC === cmdMax ) return cmdObj; // skip last z or Z command
+        subpathC++;
+        subpathArr[subpathC] = [];
+      }
+      subpathArr[subpathC].push( cmdObj.xy.end );
+      cmdC++;
+      lastCmd = cmdObj.cmd;
+      return cmdObj;
+    } );
+
+    return subpathArr;
+  },
+
+  /**
    * result - get the result points array
    */
   result: function() {
-    return this.pointsArr;
+    return {
+      commands: this.cmdArr,
+      points: this.pointsArr
+    };
   },
 
   /**

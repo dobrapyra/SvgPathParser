@@ -27,6 +27,9 @@ Object.assign(SvgPathParser.prototype, {
    */
   parse: function(dString) {
     var groupArr = dString
+      // initial prepare
+      .replace( /\s*\,\s*/g, ' ' )
+      .replace( /\s*\-\s*/g, ' -' )
       // cmd group string array
       .replace( /m|l|h|v|z|c|s|q|t|a/gi, function(c) {
         return '|' + c;
@@ -60,15 +63,81 @@ Object.assign(SvgPathParser.prototype, {
         };
       } );
 
-    // var cmdArr = [];
-    // groupArr.map( function(group) {
-    //   switch(group.cmd) {
+    var cmdArr = [];
+    var paramsL, paramsC;
+    groupArr.map( function(group) {
+      paramsL = group.params.length;
+      paramsC = 0;
+      switch(group.cmd) {
+        default:
+          console.warn('Unexpected command');
+          break;
 
-    //   }
-    // } );
+        case 'm':
+        case 'l':
+          cmdArr.push({
+            cmd: group.cmd,
+            params: group.params.slice(paramsC, paramsC + 2)
+          });
+          paramsC += 2;
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: 'l',
+              params: group.params.slice(paramsC, paramsC + 2)
+            });
+            paramsC += 2;
+          }
+          break;
+
+        case 'M':
+        case 'L':
+          cmdArr.push({
+            cmd: group.cmd,
+            params: group.params.slice(paramsC, paramsC + 2)
+          });
+          paramsC += 2;
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: 'L',
+              params: group.params.slice(paramsC, paramsC + 2)
+            });
+            paramsC += 2;
+          }
+          break;
+
+        case 'z':
+          cmdArr.push({
+            cmd: group.cmd,
+            params: []
+          });
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: 'l',
+              params: group.params.slice(paramsC, paramsC + 2)
+            });
+            paramsC += 2;
+          }
+          break;
+
+        case 'Z':
+          cmdArr.push({
+            cmd: group.cmd,
+            params: []
+          });
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: 'L',
+              params: group.params.slice(paramsC, paramsC + 2)
+            });
+            paramsC += 2;
+          }
+          break;
+
+      }
+    } );
     // console.log( cmdArr );
 
-    this.pointsArr = groupArr;
+    this.pointsArr = cmdArr;
 
     // this.pointsArr = [];
 

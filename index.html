@@ -10,7 +10,8 @@
     <!-- <script type="text/javascript" src="./dist/svg-path-parser.min.js"></script> -->
     <script type="text/javascript" src="./src/parser/core.js"></script>
     <script>
-      console.log((new SvgPathParser()).parse('m10.10 10.10 12.4 32.1l20 20z').result());
+      var pathD = 'm129.07 0.5014-75.526 0.5137-53.043 53.772 0.516 75.533 53.77 53.04 75.533-0.52 53.04-53.77-0.52-75.526-53.77-53.043zm201.68 7.4824-89.07 148.47 173.11 2.91-84.04-151.38z';
+      console.log((new SvgPathParser()).parse(pathD).result());
     </script>
   </body>
 </html>

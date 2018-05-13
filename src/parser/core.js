@@ -95,7 +95,7 @@ Object.assign(SvgPathParser.prototype, {
       paramsC = 0;
       switch(group.cmd) {
         default:
-          console.warn('Unexpected command');
+          console.warn( 'Unexpected command ' + group.cmd );
           break;
 
         case 'm':
@@ -127,6 +127,24 @@ Object.assign(SvgPathParser.prototype, {
               params: group.params.slice(paramsC, paramsC + 2)
             });
             paramsC += 2;
+          }
+          break;
+
+        case 'h':
+        case 'v':
+        case 'H':
+        case 'V':
+          cmdArr.push({
+            cmd: group.cmd,
+            params: group.params.slice(paramsC, paramsC + 1)
+          });
+          paramsC += 1;
+          while(paramsC < paramsL) {
+            cmdArr.push({
+              cmd: group.cmd,
+              params: group.params.slice(paramsC, paramsC + 1)
+            });
+            paramsC += 1;
           }
           break;
 
@@ -182,64 +200,87 @@ Object.assign(SvgPathParser.prototype, {
 
       switch(cmdObj.cmd) {
         default:
-          console.warn('Unexpected command');
+          console.warn( 'Unexpected command ' + cmdObj.cmd );
+          break;
+
+        case 'm':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[0], p ),
+            roundVal( beginXY[1] + cmdObj.params[1], p )
+          ];
+          if( lastCmd === null || lastCmd === 'z' || lastCmd === 'Z' ){
+            pathBeginXY = endXY;
+          }
           break;
 
         case 'M':
-        case 'L':
           endXY = [
             cmdObj.params[0],
             cmdObj.params[1]
           ];
-          lastXY = endXY;
-          if( cmdObj.cmd === 'M' && (
-            lastCmd === null || lastCmd === 'Z' || lastCmd === 'z'
-          ) ){
+          if( lastCmd === null || lastCmd === 'Z' || lastCmd === 'z' ){
             pathBeginXY = endXY;
           }
-          return Object.assign( cmdObj, {
-            xy: {
-              begin: beginXY,
-              end: endXY
-            }
-          } );
           break;
 
-        case 'm':
         case 'l':
           endXY = [
             roundVal( beginXY[0] + cmdObj.params[0], p ),
             roundVal( beginXY[1] + cmdObj.params[1], p )
           ];
-          lastXY = endXY;
-          if( cmdObj.cmd === 'm' && (
-            lastCmd === null || lastCmd === 'z' || lastCmd === 'Z'
-          ) ){
-            pathBeginXY = endXY;
-          }
-          return Object.assign( cmdObj, {
-            xy: {
-              begin: beginXY,
-              end: endXY
-            }
-          } );
           break;
 
-        case 'Z':
+        case 'L':
+          endXY = [
+            cmdObj.params[0],
+            cmdObj.params[1]
+          ];
+          break;
+
+        case 'h':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[0], p ),
+            beginXY[1]
+          ];
+          break;
+
+        case 'H':
+          endXY = [
+            cmdObj.params[0],
+            beginXY[1]
+          ];
+          break;
+
+        case 'v':
+          endXY = [
+            beginXY[0],
+            roundVal( beginXY[1] + cmdObj.params[1], p )
+          ];
+          break;
+
+        case 'V':
+          endXY = [
+            beginXY[0],
+            cmdObj.params[1]
+          ];
+          break;
+
         case 'z':
+        case 'Z':
           endXY = [
             pathBeginXY[0],
             pathBeginXY[1]
           ];
-          lastXY = endXY;
-          return Object.assign( cmdObj, {
-            xy: {
-              begin: beginXY,
-              end: endXY
-            }
-          } );
           break;
       }
+
+      lastXY = endXY;
+      return Object.assign( cmdObj, {
+        xy: {
+          begin: beginXY,
+          end: endXY
+        }
+      } );
     } );
 
     return cmdArr;

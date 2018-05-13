@@ -2,7 +2,7 @@ var SvgPathParser = function(props){ this.init(props); };
 Object.assign(SvgPathParser.prototype, {
 
   init: function(props) {
-
+    this.precision = props.precision || 100000;
   },
 
   /**
@@ -26,7 +26,25 @@ Object.assign(SvgPathParser.prototype, {
    * @param {string} dString - d attribute of the path
    */
   parse: function(dString) {
-    var groupArr = dString
+    var groupArr = this._getCmdGroupArr(dString);
+
+    var cmdArr = this._getCmdArr(groupArr);
+
+    var cmdArrWithXY = this._getCmdBeginEndXY(cmdArr);
+
+    this.pointsArr = cmdArrWithXY;
+
+    // this.pointsArr = [];
+
+    return this;
+  },
+
+  /**
+   * _getCmdGroupArr - return cmd group array
+   * @param {string} dString - d attribute of the path
+   */
+  _getCmdGroupArr: function(dString) {
+    return dString
       // initial prepare
       .replace( /\s*\,\s*/g, ' ' )
       .replace( /\s*\-\s*/g, ' -' )
@@ -62,9 +80,16 @@ Object.assign(SvgPathParser.prototype, {
             } )
         };
       } );
+  },
 
+  /**
+   * _getCmdArr - return cmd array
+   * @param {array} groupArr - cmd group array
+   */
+  _getCmdArr: function(groupArr) {
     var cmdArr = [];
     var paramsL, paramsC;
+
     groupArr.map( function(group) {
       paramsL = group.params.length;
       paramsC = 0;
@@ -135,13 +160,89 @@ Object.assign(SvgPathParser.prototype, {
 
       }
     } );
-    // console.log( cmdArr );
 
-    this.pointsArr = cmdArr;
+    return cmdArr;
+  },
 
-    // this.pointsArr = [];
+  /**
+   * _getCmdBeginEndXY - return cmd array with begin and end xy
+   * @param {array} cmdArr - cmd array
+   */
+  _getCmdBeginEndXY: function(cmdArr) {
+    var roundVal = this._roundVal,
+      p = this.precision;
+    var lastCmd = null, pathBeginXY = [0, 0],
+      beginXY, endXY, lastXY = [0, 0];
 
-    return this;
+    return cmdArr.map( function(cmdObj) {
+      beginXY = [
+        lastXY[0],
+        lastXY[1]
+      ];
+
+      switch(cmdObj.cmd) {
+        default:
+          console.warn('Unexpected command');
+          break;
+
+        case 'M':
+        case 'L':
+          endXY = [
+            cmdObj.params[0],
+            cmdObj.params[1]
+          ];
+          lastXY = endXY;
+          if( cmdObj.cmd === 'M' && (
+            lastCmd === null || lastCmd === 'Z' || lastCmd === 'z'
+          ) ){
+            pathBeginXY = endXY;
+          }
+          return Object.assign( cmdObj, {
+            xy: {
+              begin: beginXY,
+              end: endXY
+            }
+          } );
+          break;
+
+        case 'm':
+        case 'l':
+          endXY = [
+            roundVal( beginXY[0] + cmdObj.params[0], p ),
+            roundVal( beginXY[1] + cmdObj.params[1], p )
+          ];
+          lastXY = endXY;
+          if( cmdObj.cmd === 'm' && (
+            lastCmd === null || lastCmd === 'z' || lastCmd === 'Z'
+          ) ){
+            pathBeginXY = endXY;
+          }
+          return Object.assign( cmdObj, {
+            xy: {
+              begin: beginXY,
+              end: endXY
+            }
+          } );
+          break;
+
+        case 'Z':
+        case 'z':
+          endXY = [
+            pathBeginXY[0],
+            pathBeginXY[1]
+          ];
+          lastXY = endXY;
+          return Object.assign( cmdObj, {
+            xy: {
+              begin: beginXY,
+              end: endXY
+            }
+          } );
+          break;
+      }
+    } );
+
+    return cmdArr;
   },
 
   /**

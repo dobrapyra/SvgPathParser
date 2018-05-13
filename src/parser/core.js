@@ -275,7 +275,7 @@ Object.assign(SvgPathParser.prototype, {
         case 'v':
           endXY = [
             beginXY[0],
-            roundVal( beginXY[1] + cmdObj.params[1], p )
+            roundVal( beginXY[1] + cmdObj.params[0], p )
           ];
           break;
 
@@ -283,7 +283,7 @@ Object.assign(SvgPathParser.prototype, {
         case 'V':
           endXY = [
             beginXY[0],
-            cmdObj.params[1]
+            cmdObj.params[0]
           ];
           break;
 

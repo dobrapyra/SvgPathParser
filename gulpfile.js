@@ -1,28 +1,28 @@
-let gulp = require( 'gulp' ),
-  concat = require( 'gulp-concat' ),
-  rename = require( 'gulp-rename' ),
-  stripdebug = require( 'gulp-strip-debug' ),
-  uglify = require( 'gulp-uglify' );
+let gulp = require('gulp'),
+  concat = require('gulp-concat'),
+  rename = require('gulp-rename'),
+  stripdebug = require('gulp-strip-debug'),
+  uglify = require('gulp-uglify');
 
-gulp.task( 'build', () => {
+gulp.task('build', () => {
   return gulp
-    .src( [
+    .src([
       './src/parser/info.js',
       './src/vendors/polyfills/Object/keys.js',
       './src/vendors/polyfills/Object/assign.js',
       './src/parser/core.js'
-    ] )
-    .pipe( concat( 'svg-path-parser.js' ) )
-    .pipe( gulp.dest( './dist' ) )
-    .pipe( rename( 'svg-path-parser.min.js' ) )
-    // .pipe( stripdebug() )
-    .pipe( uglify( {
+    ])
+    .pipe(concat('svg-path-parser.js'))
+    .pipe(gulp.dest('./dist'))
+    .pipe(rename('svg-path-parser.min.js'))
+    // .pipe(stripdebug())
+    .pipe(uglify({
       output: {
         comments: `/^!/`
       }
-    } ) )
-    .pipe( gulp.dest( './dist' ) );
-} );
+    }))
+    .pipe(gulp.dest('./dist'));
+});
 
 // default tasks
-gulp.task( 'default', [ 'build' ] );
+gulp.task('default', gulp.series('build'));

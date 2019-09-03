@@ -1,6 +1,6 @@
 /*!
  * SVG path parser
- * version: 2018.05.10
+ * version: 2019.09.03
  * author: dobrapyra
  * url: https://github.com/dobrapyra/SvgPathParser
  */

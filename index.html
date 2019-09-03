@@ -5,16 +5,68 @@
     <title>SVG path parser</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <!-- <script type="text/javascript" src="./src/parser/core.js"></script> -->
+    <script type="text/javascript" src="./dist/svg-path-parser.min.js"></script>
+    <style>
+      body {
+        margin: 10px;
+      }
+      h4 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 20px;
+      }
+      h5 {
+        margin: 0;
+        font-size: 14px;
+        line-height: 18px;
+      }
+      textarea {
+        display: block;
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+      }
+    </style>
   </head>
   <body>
-    <!-- <script type="text/javascript" src="./dist/svg-path-parser.min.js"></script> -->
-    <script type="text/javascript" src="./src/parser/core.js"></script>
+    <h4>SVG path d attribute value</h4>
+    <textarea id="in">
+m50 3.8594-50 50 1.0176 76.461 53.767 53.04 49.235-0.34c-2.6322-6.1696-3.99-12.641-4.02-19.16 0-33.137 33.579-60 75-60 1.669 0.0221 3.3366 0.0888 5 0.2v-50.201l-50-50-80 0.0004zm280.74 4.1269-100.74 95.874 140 50z
+    </textarea>
+    <br />
+    <br />
+    <h4>List of xy coordinates</h4>
+    <textarea id="out" readonly>
+    </textarea>
+    <br />
+    <br />
+    <button id="parse">parse</button>
+    <br />
+    <br />
+    <h5>see console for more details</h5>
+
     <script>
-      // var pathD = 'm129.07 0.5014-75.526 0.5137-53.043 53.772 0.516 75.533 53.77 53.04 75.533-0.52 53.04-53.77-0.52-75.526-53.77-53.043zm201.68 7.4824-89.07 148.47 173.11 2.91-84.04-151.38z';
-      var pathD = 'm50 3.8594-50 50 1.0176 76.461 53.767 53.04 49.235-0.34c-2.6322-6.1696-3.99-12.641-4.02-19.16 0-33.137 33.579-60 75-60 1.669 0.0221 3.3366 0.0888 5 0.2v-50.201l-50-50-80 0.0004zm280.74 4.1269-100.74 95.874 140 50z';
-      console.log((new SvgPathParser({
-        precision: 100000
-      })).parse(pathD).result());
+      (function(){
+        var inArea = document.getElementById('in');
+        var outArea = document.getElementById('out');
+        var button = document.getElementById('parse');
+
+        function runParser() {
+          var pathD = inArea.value;
+          var result = (new SvgPathParser({
+            precision: 100000,
+            outputMode: 'array'
+          })).parse(pathD).result();
+
+          outArea.value = JSON.stringify(result.allPoints);
+
+          console.log(result);
+        }
+
+        button.addEventListener('click', runParser);
+      })();
     </script>
   </body>
 </html>

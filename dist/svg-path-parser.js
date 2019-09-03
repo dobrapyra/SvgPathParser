@@ -1,6 +1,6 @@
 /*!
  * SVG path parser
- * version: 2018.05.10
+ * version: 2019.09.03
  * author: dobrapyra
  * url: https://github.com/dobrapyra/SvgPathParser
  */
@@ -56,11 +56,12 @@ if( !Object.assign ) {
     return resultObj;
   };
 }
-var SvgPathParser = function(props){ this.init(props); };
+var SvgPathParser = function(props) { this.init(props); };
 Object.assign(SvgPathParser.prototype, {
 
   init: function(props) {
     this.precision = props.precision || 1e5;
+    this.outputMode = props.outputMode || 'array'; // array || object
   },
 
   /**
@@ -68,15 +69,14 @@ Object.assign(SvgPathParser.prototype, {
    * @param {object} pathEl - path element
    */
   parsePath: function(pathEl) {
-    if( pathEl.tagName && pathEl.tagName === 'path' ) {
-      return this.parse(pathEl.getAttribute('d'));
+    if (!pathEl.tagName || !pathEl.tagName === 'path') {
+      console.warn('Wrong input, expected path element.');
+
+      this.subPathsArr = [];
+      return this;
     }
 
-    console.warn('Wrong input, expected path element.');
-
-    this.pointsArr = [];
-
-    return this;
+    return this.parse(pathEl.getAttribute('d'));
   },
 
   /**
@@ -91,7 +91,7 @@ Object.assign(SvgPathParser.prototype, {
     var cmdArrWithXY = this._getCmdBeginEndXY(cmdArr);
 
     this.cmdArr = cmdArrWithXY;
-    this.pointsArr = this._getXYArr(cmdArrWithXY);
+    this.subPathsArr = this._getXYArr(cmdArrWithXY);
 
     return this;
   },
@@ -103,22 +103,22 @@ Object.assign(SvgPathParser.prototype, {
   _getCmdGroupArr: function(dString) {
     return dString
       // initial prepare
-      .replace( /\s*\,\s*/g, ' ' )
-      .replace( /\s*\-\s*/g, ' -' )
+      .replace(/\s*\,\s*/g, ' ')
+      .replace(/\s*\-\s*/g, ' -')
       // cmd group string array
-      .replace( /m|l|h|v|z|c|s|q|t|a/gi, function(c) {
+      .replace(/m|l|h|v|z|c|s|q|t|a/gi, function(c) {
         return '|' + c;
-      } )
+      })
       .split(/\s*\|\s*/)
       // .split('|')
-      // .map( function(group) {
+      // .map(function(group) {
       //   return group.trim();
-      // } )
-      .filter( function(group) {
+      // })
+      .filter(function(group) {
         return group !== '';
-      } )
+      })
       // cmd group array
-      .map( function(group) {
+      .map(function(group) {
         return {
           cmd: group
             .slice(0, 1),
@@ -126,17 +126,17 @@ Object.assign(SvgPathParser.prototype, {
             .slice(1)
             .split(/\s*\ \s*/)
             // .split(' ')
-            // .map( function(param) {
+            // .map(function(param) {
             //   return param.trim();
-            // } )
-            .filter( function(param) {
+            // })
+            .filter(function(param) {
               return param !== '';
-            } )
-            .map( function(param) {
+            })
+            .map(function(param) {
               return parseFloat(param);
-            } )
+            })
         };
-      } );
+      });
   },
 
   /**
@@ -147,13 +147,13 @@ Object.assign(SvgPathParser.prototype, {
     var cmdArr = [];
     var paramsL, paramsC;
 
-    groupArr.map( function(group) {
+    groupArr.map(function(group) {
       paramsL = group.params.length;
       paramsC = 0;
 
-      switch(group.cmd) {
+      switch (group.cmd) {
         default:
-          console.warn( 'Unexpected command ' + group.cmd );
+          console.warn('Unexpected command ' + group.cmd);
           break;
 
         case 'm':
@@ -163,7 +163,7 @@ Object.assign(SvgPathParser.prototype, {
             params: group.params.slice(paramsC, paramsC + 2)
           });
           paramsC += 2;
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: 'l',
               params: group.params.slice(paramsC, paramsC + 2)
@@ -179,7 +179,7 @@ Object.assign(SvgPathParser.prototype, {
             params: group.params.slice(paramsC, paramsC + 2)
           });
           paramsC += 2;
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: 'L',
               params: group.params.slice(paramsC, paramsC + 2)
@@ -192,7 +192,7 @@ Object.assign(SvgPathParser.prototype, {
         case 'v':
         case 'H':
         case 'V':
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
               params: group.params.slice(paramsC, paramsC + 1)
@@ -206,7 +206,7 @@ Object.assign(SvgPathParser.prototype, {
             cmd: group.cmd,
             params: []
           });
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: 'l',
               params: group.params.slice(paramsC, paramsC + 2)
@@ -220,7 +220,7 @@ Object.assign(SvgPathParser.prototype, {
             cmd: group.cmd,
             params: []
           });
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: 'L',
               params: group.params.slice(paramsC, paramsC + 2)
@@ -231,7 +231,7 @@ Object.assign(SvgPathParser.prototype, {
 
         case 'c':
         case 'C':
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
               params: group.params.slice(paramsC, paramsC + 6)
@@ -244,7 +244,7 @@ Object.assign(SvgPathParser.prototype, {
         case 'S':
         case 'q':
         case 'Q':
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
               params: group.params.slice(paramsC, paramsC + 4)
@@ -255,7 +255,7 @@ Object.assign(SvgPathParser.prototype, {
 
         case 't':
         case 'T':
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
               params: group.params.slice(paramsC, paramsC + 2)
@@ -266,7 +266,7 @@ Object.assign(SvgPathParser.prototype, {
 
         case 'a':
         case 'A':
-          while(paramsC < paramsL) {
+          while (paramsC < paramsL) {
             cmdArr.push({
               cmd: group.cmd,
               params: group.params.slice(paramsC, paramsC + 7)
@@ -278,7 +278,7 @@ Object.assign(SvgPathParser.prototype, {
       }
 
       return group;
-    } );
+    });
 
     return cmdArr;
   },
@@ -293,28 +293,28 @@ Object.assign(SvgPathParser.prototype, {
     var lastCmd = null, pathBeginXY = [0, 0],
       beginXY, endXY, lastXY = [0, 0];
 
-    return cmdArr.map( function(cmdObj) {
+    return cmdArr.map(function(cmdObj) {
       beginXY = [
         lastXY[0],
         lastXY[1]
       ];
 
-      switch(cmdObj.cmd) {
+      switch (cmdObj.cmd) {
         default:
-          console.warn( 'Unexpected command ' + cmdObj.cmd );
+          console.warn('Unexpected command ' + cmdObj.cmd);
           break;
 
         // moveTo relative
         case 'm':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[0], p ),
-            roundVal( beginXY[1] + cmdObj.params[1], p )
+            roundVal(beginXY[0] + cmdObj.params[0], p),
+            roundVal(beginXY[1] + cmdObj.params[1], p)
           ];
-          if(
+          if (
             lastCmd === 'z' || lastCmd === 'Z' ||
             lastCmd === 'm' || lastCmd === 'M' ||
             lastCmd === null
-          ){
+          ) {
             pathBeginXY = endXY;
           }
           break;
@@ -325,11 +325,11 @@ Object.assign(SvgPathParser.prototype, {
             cmdObj.params[0],
             cmdObj.params[1]
           ];
-          if(
+          if (
             lastCmd === 'Z' || lastCmd === 'z' ||
             lastCmd === 'M' || lastCmd === 'm' ||
             lastCmd === null
-          ){
+          ) {
             pathBeginXY = endXY;
           }
           break;
@@ -337,8 +337,8 @@ Object.assign(SvgPathParser.prototype, {
         // lineTo relative
         case 'l':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[0], p ),
-            roundVal( beginXY[1] + cmdObj.params[1], p )
+            roundVal(beginXY[0] + cmdObj.params[0], p),
+            roundVal(beginXY[1] + cmdObj.params[1], p)
           ];
           break;
 
@@ -353,7 +353,7 @@ Object.assign(SvgPathParser.prototype, {
         // horizontal line relative
         case 'h':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[0], p ),
+            roundVal(beginXY[0] + cmdObj.params[0], p),
             beginXY[1]
           ];
           break;
@@ -370,7 +370,7 @@ Object.assign(SvgPathParser.prototype, {
         case 'v':
           endXY = [
             beginXY[0],
-            roundVal( beginXY[1] + cmdObj.params[0], p )
+            roundVal(beginXY[1] + cmdObj.params[0], p)
           ];
           break;
 
@@ -394,8 +394,8 @@ Object.assign(SvgPathParser.prototype, {
         // cubic bezier curve relative
         case 'c':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[4], p ),
-            roundVal( beginXY[1] + cmdObj.params[5], p )
+            roundVal(beginXY[0] + cmdObj.params[4], p),
+            roundVal(beginXY[1] + cmdObj.params[5], p)
           ];
           break;
 
@@ -410,8 +410,8 @@ Object.assign(SvgPathParser.prototype, {
         // shorthand cubic bezier curve relative
         case 's':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[2], p ),
-            roundVal( beginXY[1] + cmdObj.params[3], p )
+            roundVal(beginXY[0] + cmdObj.params[2], p),
+            roundVal(beginXY[1] + cmdObj.params[3], p)
           ];
           break;
 
@@ -426,8 +426,8 @@ Object.assign(SvgPathParser.prototype, {
         // quadratic bezier curve relative
         case 'q':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[2], p ),
-            roundVal( beginXY[1] + cmdObj.params[3], p )
+            roundVal(beginXY[0] + cmdObj.params[2], p),
+            roundVal(beginXY[1] + cmdObj.params[3], p)
           ];
           break;
 
@@ -442,8 +442,8 @@ Object.assign(SvgPathParser.prototype, {
         // shorthand quadratic bezier curve relative
         case 'q':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[0], p ),
-            roundVal( beginXY[1] + cmdObj.params[1], p )
+            roundVal(beginXY[0] + cmdObj.params[0], p),
+            roundVal(beginXY[1] + cmdObj.params[1], p)
           ];
           break;
 
@@ -458,8 +458,8 @@ Object.assign(SvgPathParser.prototype, {
         // elipse relative
         case 'a':
           endXY = [
-            roundVal( beginXY[0] + cmdObj.params[5], p ),
-            roundVal( beginXY[1] + cmdObj.params[6], p )
+            roundVal(beginXY[0] + cmdObj.params[5], p),
+            roundVal(beginXY[1] + cmdObj.params[6], p)
           ];
           break;
 
@@ -474,13 +474,13 @@ Object.assign(SvgPathParser.prototype, {
 
       lastCmd = cmdObj.cmd;
       lastXY = endXY;
-      return Object.assign( cmdObj, {
+      return Object.assign(cmdObj, {
         xy: {
           begin: beginXY,
           end: endXY
         }
-      } );
-    } );
+      });
+    });
 
     return cmdArr;
   },
@@ -497,52 +497,66 @@ Object.assign(SvgPathParser.prototype, {
     var lastCmd = null;
 
     subpathArr[subpathC] = [];
-    cmdArr.map( function(cmdObj) {
-      if( cmdObj.cmd === 'm' || cmdObj.cmd === 'M' && (
+    cmdArr.map(function(cmdObj) {
+      if (cmdObj.cmd === 'm' || cmdObj.cmd === 'M' && (
         lastCmd === 'm' || lastCmd === 'M' ||
         lastCmd === 'z' || lastCmd === 'Z'
-      ) ) {
+      )) {
         subpathArr[subpathC].splice(-1);
       }
-      if( cmdObj.cmd === 'z' || cmdObj.cmd === 'Z' ) {
-        if( cmdC === cmdMax ) return cmdObj; // skip last z or Z command
+      if (cmdObj.cmd === 'z' || cmdObj.cmd === 'Z') {
+        if (cmdC === cmdMax) return cmdObj; // skip last z or Z command
         subpathC++;
         subpathArr[subpathC] = [];
       }
-      subpathArr[subpathC].push( cmdObj.xy.end );
+      subpathArr[subpathC].push(cmdObj.xy.end);
       cmdC++;
       lastCmd = cmdObj.cmd;
       return cmdObj;
-    } );
+    });
 
     return subpathArr;
   },
 
   /**
    * result - get the result points array
+   * @param {number} p - precision
+   * @param {string} m - output mode ('array' || 'object')
    */
-  result: function() {
+  result: function(p, m) {
+    var roundArr = this._roundArr.bind(this);
+    var formatArr = this._formatArr.bind(this);
+    var _m = m || this.outputMode;
+    var _p = p || this.precision;
+
+    var allPoints = [];
+    var points = this.subPathsArr.map(function(subPath) {
+      var finalSubPath = formatArr(roundArr(subPath, _p), _m);
+      allPoints = allPoints.concat(finalSubPath);
+      return finalSubPath;
+    });
+
     return {
       commands: this.cmdArr,
-      points: this.pointsArr
+      points: points,
+      allPoints: allPoints,
     };
   },
 
   /**
-   * round - round all points coordinate to precision
+   * _roundArr - round all points coordinate to precision
+   * @param {array} pointsArr - array of points in array format [x, y]
    * @param {number} p - precision
    */
-  round: function(p) {
+  _roundArr: function(pointsArr, p) {
     var roundVal = this._roundVal;
 
-    this.pointsArr = this.pointsArr.map(function(point) {
-      return Object.assign(point, {
-        x: roundVal(x, p),
-        y: roundVal(y, p)
-      });
+    return pointsArr.map(function(point) {
+      return [
+        roundVal(point[0], p),
+        roundVal(point[1], p)
+      ];
     });
-
-    return this;
   },
 
   /**
@@ -552,6 +566,22 @@ Object.assign(SvgPathParser.prototype, {
    */
   _roundVal: function(val, p) {
     return Math.round(val * p) / p;
-  }
+  },
+
+  /**
+   * _formatArr - format all points coordinate to object in object mode
+   * @param {array} pointsArr - array of points in array format [x, y]
+   * @param {number} m - output mode
+   */
+  _formatArr: function(pointsArr, m) {
+    if (m !== 'object') return pointsArr;
+
+    return pointsArr.map(function(point) {
+      return Object.assign({}, {
+        x: point[0],
+        y: point[1]
+      });
+    });
+  },
 
 });
